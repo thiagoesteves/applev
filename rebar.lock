@@ -1,0 +1,14 @@
+{"1.1.0",
+[{<<"jsone">>,
+  {git,"https://github.com/sile/jsone",
+       {ref,"56416ee2b05ee66ca7a8454da4fbbd8899bfd18e"}},
+  0},
+ {<<"meck">>,{pkg,<<"meck">>,<<"0.8.13">>},0},
+ {<<"redbug">>,
+  {git,"https://github.com/massemanet/redbug",
+       {ref,"c583d4567d1e2b8a540593ad0512559798d42565"}},
+  0}]}.
+[
+{pkg_hash,[
+ {<<"meck">>, <<"FFEDB39F99B0B99703B8601C6F17C7F76313EE12DE6B646E671E3188401F7866">>}]}
+].
