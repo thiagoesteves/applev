@@ -53,7 +53,8 @@ validate()->
 %%--------------------------------------------------------------------
 -spec validate(binary()) -> { ok | error , apple_return() | map() }.
 validate(BinReceipt) ->
-  { ok, PidDest } = applev_receipt_consumer:start_link(60000),
+  { ok, PidDest } = applev_receipt_consumer:start_link(
+                                               ?DEFAULT_TIMEOUT_FOR_VALIDATION),
   { ok, _}        = applev_receipt_sup:process_msg(PidDest, BinReceipt),
   wait_web_request(PidDest).
 
