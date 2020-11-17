@@ -24,7 +24,7 @@
 -export([validate/0, validate/1]).
 
 % Validate function (non-blocking)
--export([validate_async/0, validate_async/2]).
+-export([validate_async/0, validate_async/3]).
 
 %%%===================================================================
 %%% Local Defines
@@ -55,7 +55,7 @@ validate()->
 validate(BinReceipt) ->
   { ok, PidDest } = applev_receipt_consumer:start_link(
                                                ?DEFAULT_TIMEOUT_FOR_VALIDATION),
-  { ok, _}        = applev_receipt_sup:process_msg(PidDest, BinReceipt),
+  { ok, _}        = applev_receipt_sup:process_msg(PidDest, BinReceipt, none),
   wait_web_request(PidDest).
 
 %%--------------------------------------------------------------------
@@ -67,18 +67,19 @@ validate(BinReceipt) ->
 -spec validate_async() -> { ok , undefined | pid() }.
 validate_async()->
   %% Read file with a default sand-box receipt
-  applev_receipt_sup:process_msg(self(), ?APPLE_SANDBOX_RECEIPT).
+  applev_receipt_sup:process_msg(self(), ?APPLE_SANDBOX_RECEIPT, none).
 
 %%--------------------------------------------------------------------
 %% @doc This function validates the receipt via a non-blocking function
 %%
 %% @param PidDest Process pid that will receive the result
 %% @param BinReceipt Receipt to validate in binary format <<"example">>
+%% @param Args Any Related data for the specific receipt
 %% @end
 %%--------------------------------------------------------------------
--spec validate_async(pid(), binary()) -> { ok , undefined | pid() }.
-validate_async(PidDest, BinReceipt) ->
-  applev_receipt_sup:process_msg(PidDest, BinReceipt).
+-spec validate_async(pid(), binary(), any()) -> { ok , undefined | pid() }.
+validate_async(PidDest, BinReceipt, Args) ->
+  applev_receipt_sup:process_msg(PidDest, BinReceipt, Args).
 
 %%====================================================================
 %% Internal functions

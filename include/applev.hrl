@@ -33,7 +33,7 @@
                                                % 21005, 21009 or http error
 
 % Validation message to be received when the validation is done
--define(APPLEV_MSG(Status, Receipt), {apple_receipt_return, {Status, Receipt}}).
+-define(APPLEV_MSG(Status, Receipt, Args), {apple_receipt_return, {Status, Receipt, Args}}).
 
 % file with deafult sand-box receipt
 -define(APPLEV_SANDBOX_RECEIPT, "doc/receipt.txt").

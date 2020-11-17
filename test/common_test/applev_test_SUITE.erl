@@ -68,6 +68,9 @@
 %% Timeout to wait for all msgs to be received
 -define(TIMEOUT_TO_RECEIVE_MSG, 1000).
 
+%% Passed Arguments
+-define(TEST_ARGS, [arg1, arg2, arg3]).
+
 %%%===================================================================
 %%% Test exports
 %%%===================================================================
@@ -196,7 +199,7 @@ validate_async_test_ok(_Config) ->
   ?assertMatch( {ok, _}, applev:validate_async() ),
 
   Res = receive
-        ?APPLEV_MSG(ok,R) -> {ok, R}
+        ?APPLEV_MSG(ok,R,_A) -> {ok, R}
       after 1000 ->
           error
       end,
@@ -214,10 +217,10 @@ validate_async_test_pid_receipt_ok(_Config) ->
   applev_sup:start_link(),
 
   %% Check read OK
-  ?assertMatch( {ok, _}, applev:validate_async(self(), ?APPLE_SANDBOX_RECEIPT)),
+  ?assertMatch( {ok, _}, applev:validate_async(self(), ?APPLE_SANDBOX_RECEIPT, ?TEST_ARGS)),
 
   Res = receive
-        ?APPLEV_MSG(ok,R) -> {ok, R}
+        ?APPLEV_MSG(ok,R,?TEST_ARGS) -> {ok, R}
       after 1000 ->
           error
       end,
@@ -476,7 +479,8 @@ applev_receipt_full_coverage_ok(_Config) ->
       {ok, {?HTTP_OK,0, ?IN_APP_RESP_INVALID_JSON} }
     end),
 
-  {ok, Pid} = applev_receipt_sup:process_msg(self(), ?APPLE_SANDBOX_RECEIPT),
+  {ok, Pid} = applev_receipt_sup:process_msg(self(), ?APPLE_SANDBOX_RECEIPT,
+                                                     ?TEST_ARGS),
 
   gen_server:cast(Pid, {none}),
   gen_server:call(Pid, {none}),
@@ -535,7 +539,7 @@ validate_sync_timeout_error(_Config) ->
 create_receipt_validation_server(Pid, NumberOfServer) ->
   lists:foreach(
     fun(_) ->
-      applev_receipt_sup:process_msg(Pid, ?APPLE_SANDBOX_RECEIPT)
+      applev_receipt_sup:process_msg(Pid, ?APPLE_SANDBOX_RECEIPT, ?TEST_ARGS)
     end,
     lists:seq(1,NumberOfServer)
   ).
@@ -544,8 +548,8 @@ message_server_wait(Messages, Timeout) ->
   lists:map(
     fun(_) ->
       receive
-        ?APPLEV_MSG(ok,R) ->    {ok, R};
-        ?APPLEV_MSG(error,R) -> {{error, R}, not_used}
+        ?APPLEV_MSG(ok,R, ?TEST_ARGS) ->    {ok, R};
+        ?APPLEV_MSG(error,R, ?TEST_ARGS) -> {{error, R}, not_used}
       after Timeout ->
           {{timeout}, not_used}
       end

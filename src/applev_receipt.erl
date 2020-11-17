@@ -24,7 +24,7 @@
 
 %% gen_server exports
 -export([init/1,
-         start_link/2,
+         start_link/3,
          terminate/2,
          handle_cast/2,
          handle_info/2,
@@ -48,6 +48,7 @@
 -define(MAP_RECEIPT,      receipt).
 -define(MAP_PID_DEST,     pid_dest).
 -define(MAP_RETRIES,      retries).
+-define(MAP_RCPT_ARGS,    args).
 -define(MAP_APPLE_RCPT,   apple_receipt).
 
 % Apple answer map
@@ -60,15 +61,15 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
--spec start_link(pid(), binary()) -> {ok, pid()} | ignore | {error, term()}.
-start_link(PidDest, ReceiptToValidate) ->
-  gen_server:start_link(?MODULE, [PidDest, ReceiptToValidate], []).
+-spec start_link(pid() | atom(), binary(), any()) -> {ok, pid()} | ignore | {error, term()}.
+start_link(PidDest, ReceiptToValidate, Args) ->
+  gen_server:start_link(?MODULE, [PidDest, ReceiptToValidate, Args], []).
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 -spec init(list()) -> {ok, map()} | ignore | {stop, term()}.
-init([PidDest, ReceiptToValidate]) ->
+init([PidDest, ReceiptToValidate, Args]) ->
   %% Enable trapping exits
   process_flag(trap_exit, true),
   %% Start Validation
@@ -77,7 +78,8 @@ init([PidDest, ReceiptToValidate]) ->
   {ok, #{?MAP_RETRIES    => ?MAX_RETRIES,
          ?MAP_PID_DEST   => PidDest,
          ?MAP_RECEIPT    => ReceiptToValidate,
-         ?MAP_APPLE_RCPT => undefined} }.
+         ?MAP_APPLE_RCPT => undefined,
+         ?MAP_RCPT_ARGS  => Args} }.
 
 handle_cast(_Msg, State) ->
   {noreply, State}.
@@ -86,8 +88,9 @@ handle_call(_Msg, _From, State) ->
   {reply, ok, State}.
 
 % Handle maximum number of retries.
-handle_info(_, #{?MAP_RETRIES := 0, ?MAP_PID_DEST := PidDest } = State) ->
-  erlang:send(PidDest, ?APPLEV_MSG(error, max_number_of_tries)),
+handle_info(_, #{?MAP_RETRIES := 0, ?MAP_PID_DEST := PidDest,
+                 ?MAP_RCPT_ARGS := Args } = State) ->
+  erlang:send(PidDest, ?APPLEV_MSG(error, max_number_of_tries, Args)),
   {stop, normal, State};
 
 % Handle validation
@@ -107,23 +110,26 @@ handle_info(validation_start, #{?MAP_RECEIPT := ReceiptToValidate,
 handle_info(validation_done, #{?MAP_APPLE_RCPT :=
                                #{ ?MAP_APPLE_STATUS  :=
                                                   ?APPLE_STATUS_ERR_CORRUPTED },
-                               ?MAP_PID_DEST := PidDest}
+                               ?MAP_PID_DEST  := PidDest,
+                               ?MAP_RCPT_ARGS := Args }
                                = State) ->
-  erlang:send(PidDest, ?APPLEV_MSG(error, receipt_corrupted)),
+  erlang:send(PidDest, ?APPLEV_MSG(error, receipt_corrupted, Args)),
   {stop, normal, State};
 
 handle_info(validation_done, #{?MAP_APPLE_RCPT :=
                                #{ ?MAP_APPLE_STATUS  :=
                                                     ?APPLE_STATUS_ERR_EXPIRED },
-                               ?MAP_PID_DEST := PidDest}
+                               ?MAP_PID_DEST  := PidDest,
+                               ?MAP_RCPT_ARGS := Args }
                                = State) ->
-  erlang:send(PidDest, ?APPLEV_MSG(error, receipt_expired)),
+  erlang:send(PidDest, ?APPLEV_MSG(error, receipt_expired, Args)),
   {stop, normal, State};
 
 handle_info(validation_done, #{?MAP_APPLE_RCPT :=
                                   #{ ?MAP_APPLE_RECEIPT := Receipt},
-                               ?MAP_PID_DEST := PidDest} = State) ->
-  erlang:send(PidDest, ?APPLEV_MSG(ok, Receipt)),
+                               ?MAP_PID_DEST  := PidDest,
+                               ?MAP_RCPT_ARGS := Args } = State) ->
+  erlang:send(PidDest, ?APPLEV_MSG(ok, Receipt, Args)),
   {stop, normal, State};
 
 handle_info(_Info, State) ->

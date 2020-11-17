@@ -15,7 +15,7 @@
 
 -export([start_link/0]).
 
--export([init/1, process_msg/2]).
+-export([init/1, process_msg/3]).
 
 %%--------------------------------------------------------------------
 %% Definitions
@@ -49,12 +49,14 @@ init([]) ->
 %%      the received message and in case of any failure, the supervisor
 %%      will recriate a newone with the same message
 %%
-%% @param Body Received receit in the string format
+%% @param PidDest Pid or Atom that will validated receipt
+%% @param ReceiptToValidate Receit to be validated
+%% @param Args Any argument or metadata related to the receipt
 %% @end
 %%--------------------------------------------------------------------
--spec process_msg(pid(), string()) -> { ok , undefined | pid() }.
-process_msg(PidDest, ReceiptToValidate) ->
-  {ok, Pid} = supervisor:start_child(?MODULE, [PidDest, ReceiptToValidate]),
+-spec process_msg(pid() | atom(), binary(), any()) -> { ok , undefined | pid() }.
+process_msg(PidDest, ReceiptToValidate, Args) ->
+  {ok, Pid} = supervisor:start_child(?MODULE, [PidDest, ReceiptToValidate, Args]),
   {ok, Pid}.
 
 %%====================================================================

@@ -56,7 +56,7 @@ start_link(Timeout) ->
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
--spec init(list()) -> {ok, map()} | ignore | {stop, term()}.
+-spec init(list()) -> {ok, map(), non_neg_integer()}.
 init([Timeout]) ->
   {ok, #{timeout => Timeout, status => error, receipt => undefined}, Timeout}.
 
@@ -71,7 +71,7 @@ handle_call(get_receipt, _From, #{ receipt := R,
                                    status  := S} = State) ->
   {stop, normal, { S, R }, State}.
 
-handle_info( {apple_receipt_return, {Status, Rcpt} }, #{ timeout := T } = State) ->
+handle_info( {apple_receipt_return, {Status, Rcpt, _Args} }, #{ timeout := T } = State) ->
   {noreply, State#{ status => Status, receipt => Rcpt }, T};
 
 handle_info(timeout, State) ->

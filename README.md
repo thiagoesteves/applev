@@ -17,20 +17,21 @@ make
 
 ### How to use the application
 
-The application has two modes of operation: Sync and Async. If you decide to use the sync mode, when validation function is called, the function will be blocked until it finishes (or timeout). If async mode is selected, you must pass the PID of the destination process in order to receive the result. See the examples:
+The application has two modes of operation: Sync and Async. If you decide to use the sync mode, when validation function is called, the function will be blocked until it finishes (or timeout). If async mode is selected, you must pass the PID (or process name) of the destination process in order to receive the result and any argument to identify the validated receipt. See the examples:
 ```erlang
 1> applev:validate(<<"Your Receipt Here">>).
 {ok,#{<<"bid">> => <<"com.es.Purchaser">>,<<"bvrs">> => <<"3">>,
       ...
       <<"unique_vendor_identifier">> =>
           <<"5C275B5A-3E66-4026-9523-845B225755FC">>}}
-2> applev:validate_async(self(), <<"Your Receipt Here">>).
+2> applev:validate_async(self(), <<"Your Receipt Here">>, [arg1, arg2]).
 {ok,<0.247.0>}
 3> flush().
 Shell got {apple_receipt_return,{ok,#{<<"bid">> => <<"com.es.Purchaser">>,
                                       ...
                                       <<"unique_vendor_identifier">> =>
-                                          <<"5C275B5A-3E66-4026-9523-845B225755FC">>}}}
+                                          <<"5C275B5A-3E66-4026-9523-845B225755FC">>},
+                                          [arg1, arg2]} }
 ok
 ```
 
@@ -49,7 +50,8 @@ In order to test the connectivity, there are test functions using sandbox receip
 Shell got {apple_receipt_return,{ok,#{<<"bid">> => <<"com.es.Purchaser">>,
                                       ...
                                       <<"unique_vendor_identifier">> =>
-                                          <<"5C275B5A-3E66-4026-9523-845B225755FC">>}}}
+                                          <<"5C275B5A-3E66-4026-9523-845B225755FC">>}
+                                      none}}
 ok
 ```
 
